@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -18,7 +18,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -60,25 +60,23 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.runValueIteration()
 
     def runValueIteration(self):
-        # Write value iteration code here
-        n = self.iterations
-        for i in n:
+        states = self.mdp.getStates()
+        for i in range(self.iterations):
+            #to save values for each state (using dictionary):
             tempValues = util.Counter()
-            for s in self.mdp.getStates():
+            for s in states:
                 if self.mdp.isTerminal(s):
-                    tempValues[s] = 0
-                else:
-                    maxV = -99999
-                    v = 0
-                    actions = self.mdp.getPossibleActions(s)
-                    for a in actions:
-                        sPrimes = self.mdp.getTransitionStatesAndProbs(s,a)
-                        for sPrime in sPrimes:
-                            reward = self.mdp.getReward(s, a, sPrime[1])
-                            v += sPrime[1] *(reward + self.discount * self.values[sPrime[0]])
-                        maxV = max(v, maxV)
-                    if maxV != -99999:
-                        tempValues[s] = maxV
+                    continue
+                actions = self.mdp.getPossibleActions(s)
+                actionsValues = util.Counter()
+                for a in actions:
+                    total = []
+                    sPrimes = self.mdp.getTransitionStatesAndProbs(s,a)
+                    for (sPrime, p) in sPrimes:
+                        r = self.mdp.getReward(s, a, sPrime)
+                        total.append(p * (r+ self.discount * self.values[sPrime]))
+                    actionsValues[a] = sum(total)
+                tempValues[s] = max(list(actionsValues.values()))
             self.values = tempValues
 
     def getValue(self, state):
@@ -93,13 +91,12 @@ class ValueIterationAgent(ValueEstimationAgent):
           Compute the Q-value of action in state from the
           value function stored in self.values.
         """
-        q = 0
-        sPrimes = self.mdp.getTransitionStatesAndProbs(state, action)
-        for sPrime in sPrimes:
-            reward = self.mdp.getReward(state, action, sPrime[1])
-            q += sPrime[1] * (reward + self.discount * self.values[sPrime[0]])
-
-        return q
+        total_value = []
+        nextState_prob_list = self.mdp.getTransitionStatesAndProbs(state, action)
+        for (nextState, prob) in nextState_prob_list:
+            reward = self.mdp.getReward(state, action, nextState)
+            total_value.append(prob * (reward + self.discount * self.values[nextState]))
+        return sum(total_value)
         #util.raiseNotDefined()
 
     def computeActionFromValues(self, state):
@@ -117,7 +114,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         for a in self.mdp.getPossibleActions(state):
             qValues[a]=self.computeQValueFromValues(state,a)
 
-        return max(qValues, qValues.get)
+        return max(qValues, key=qValues.get)
 
         #util.raiseNotDefined()
 
