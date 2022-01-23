@@ -209,7 +209,7 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
         queue = util.PriorityQueue()
 
         #3: if not terminal, update queue
-        for s in mdp.getStates():
+        for s in self.mdp.getStates():
             if not self.mdp.isTerminal(s):
                 maxQ = max(self.computeQValueFromValues(s,a) for a in self.mdp.getPossibleActions(s) )
                 diff = abs(self.values[s] - maxQ)
@@ -223,12 +223,13 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
             s = queue.pop()
             if not self.mdp.isTerminal(s):
                 #update s value
-                maxV = max(self.computeQValueFromValues(s,a) for a in self.mdp.getPossibleActions(s))
+                maxQ = max(self.computeQValueFromValues(s,a) for a in self.mdp.getPossibleActions(s))
+                self.values[s] = maxQ
 
             #for each p:
             for pre in p[s]:
                 if not self.mdp.isTerminal(p):
-                    maxQ = max(self.computeQValueFromValues(s, a) for a in self.mdp.getPossibleActions(s))
-                    diff = abs(self.values[s] - maxQ)
+                    maxQ = max(self.computeQValueFromValues(pre, a) for a in self.mdp.getPossibleActions(pre))
+                    diff = abs(self.values[pre] - maxQ)
                     if diff > self.theta:
                         queue.update(pre, -diff)
